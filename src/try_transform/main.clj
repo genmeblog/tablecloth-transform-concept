@@ -18,11 +18,11 @@
   )
 
 (defn merge-or-assoc-ds
-  ([ds-or-map new-map]
+  ([id ds-or-map new-map]
    (if (satisfies? proto-ds/PColumnarDataset ds-or-map)
      (assoc new-map
             :dataset ds-or-map)
-     (merge ds-or-map new-map)
+     (assoc ds-or-map id new-map)
      ))
   ([ds-or-map]
    (merge-or-assoc-ds ds-or-map {})
@@ -55,14 +55,14 @@
   (associate-ds ds-or-map
                 (ds-mod/set-inference-target (->ds ds-or-map) target-name-or-seq)))
 
-(defn train-or-predict [ds-or-map options ]
+(defn train-or-predict [id ds-or-map options ]
   ;;;  this function requires map
   (let [ds (:dataset ds-or-map)
         result (case (:mode ds-or-map)
                  :fit (ml/train ds options)
-                 :transform (ml/predict ds ds-or-map )
+                 :transform (ml/predict ds (get ds-or-map id) )
                  )]
-    (merge-or-assoc-ds ds-or-map result)))
+    (merge-or-assoc-ds id ds-or-map result)))
 
 
 
@@ -75,7 +75,7 @@
       (drop-rows 2)                     ;; example for arbitray tabclecoth transformation
       (categorical->number cf/categorical)
       (set-inference-target "species")
-      (train-or-predict {:model-type :xgboost/binary-hinge-loss})
+      (train-or-predict :xgboost {:model-type :xgboost/binary-hinge-loss})
       ))
 
 ;;;  just fo demo, train=test
