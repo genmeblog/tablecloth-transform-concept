@@ -5,15 +5,12 @@
             [tech.v3.dataset.modelling :as ds-mod]
             [tech.v3.dataset :as ds]
             [tech.v3.protocols.dataset :as proto-ds]
-            [tech.v3.libs.xgboost]
-
-            )
-  )
+            [tech.v3.libs.xgboost]))
 
 
 
 
-(def ds (tc/dataset "https://raw.githubusercontent.com/techascent/tech.ml/master/test/data/iris.csv"))
+;;;  ease the duality of map-dataset
 
 (defn ->ds [ds-or-map]
   (get ds-or-map :dataset ds-or-map )
@@ -41,9 +38,12 @@
            )
     )
   )
+
+
+;;;  adapt exiting function to be transform compliant
 (defn drop-rows [ds-or-map rows-selector]
   (associate-ds ds-or-map
-   (tc/drop-rows  (->ds ds-or-map) rows-selector))
+                (tc/drop-rows  (->ds ds-or-map) rows-selector))
   )
 
 (defn categorical->number [ds-or-map filter-fn-or-dataset]
@@ -56,26 +56,36 @@
                 (ds-mod/set-inference-target (->ds ds-or-map) target-name-or-seq)))
 
 (defn train-or-predict [ds-or-map options ]
-  ;;;  requires map
+  ;;;  this function requires map
   (let [ds (:dataset ds-or-map)
         result (case (:mode ds-or-map)
                  :fit (ml/train ds options)
-                 :transform (ml/predict)
+                 :transform (ml/predict ds ds-or-map )
                  )]
     (merge-or-assoc-ds ds-or-map result)))
 
 
+
+
+
+(def ds (tc/dataset "https://raw.githubusercontent.com/techascent/tech.ml/master/test/data/iris.csv"))
+
 (defn run-pipeline [ds context]
   (-> (merge context {:dataset ds})
-      (drop-rows 2)
+      (drop-rows 2)                     ;; example for arbitray tabclecoth transformation
       (categorical->number cf/categorical)
       (set-inference-target "species")
-      ;; (train-or-predict {:model-type :xgboost/binary-hinge-loss})
+      (train-or-predict {:model-type :xgboost/binary-hinge-loss})
       ))
 
-
+;;;  just fo demo, train=test
 (def train-ds ds)
 (def test-ds ds)
 
-(def trained-context
-   (run-pipeline train-ds {:mode :fit}))
+;; fit thge pipeline (including train)
+(def fit-result
+  (run-pipeline train-ds {:mode :fit}))
+
+;;;  transform (= predict ) on test
+(def transform-result
+  (run-pipeline test-ds (merge fit-result {:mode :transform})))
