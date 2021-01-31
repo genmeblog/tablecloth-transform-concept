@@ -1,0 +1,27 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.10.1"}
+        techascent/tech.ml {:mvn/version "5.00-beta-14"}
+        scicloj/tablecloth {:mvn/version "5.00-beta-28"}
+
+        org.tcrawley/dynapath    {:mvn/version "0.2.5"}
+        com.cemerick/pomegranate {:mvn/version "0.4.0"}
+
+        }
+ :aliases
+ {:run-m {:main-opts ["-m" "try-transform.main"]}
+  :run-x {:ns-default try-transform.main
+          :exec-fn greet
+          :exec-args {:name "Clojure"}}
+  :test {:extra-paths ["test"]
+         :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
+  :runner
+  {:extra-deps {com.cognitect/test-runner
+                {:git/url "https://github.com/cognitect-labs/test-runner"
+                 :sha "b6b3193fcc42659d7e46ecd1884a228993441182"}}
+   :main-opts ["-m" "cognitect.test-runner"
+               "-d" "test"]}
+  :uberjar {:replace-deps {seancorfield/depstar {:mvn/version "2.0.165"}}
+            :exec-fn hf.depstar/uberjar
+            :exec-args {:aot true
+                        :jar "try-transform.main.jar"
+                        :main-class "try-transform.main"}}}}
