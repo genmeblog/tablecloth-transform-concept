@@ -55,7 +55,7 @@
   (associate-ds ds-or-map
                 (ds-mod/set-inference-target (->ds ds-or-map) target-name-or-seq)))
 
-(defn train-or-predict [id ds-or-map options ]
+(defn train-or-predict [ds-or-map id options ]
   ;;;  this function requires map
   (let [ds (:dataset ds-or-map)
         result (case (:mode ds-or-map)
@@ -70,17 +70,21 @@
 
 (def ds (tc/dataset "https://raw.githubusercontent.com/techascent/tech.ml/master/test/data/iris.csv"))
 
-(defn run-pipeline [ds context]
-  (-> (merge context {:dataset ds})
-      (drop-rows 2)                     ;; example for arbitray tabclecoth transformation
-      (categorical->number cf/categorical)
-      (set-inference-target "species")
-      (train-or-predict :xgboost {:model-type :xgboost/binary-hinge-loss})
-      ))
+
 
 ;;;  just fo demo, train=test
 (def train-ds ds)
 (def test-ds ds)
+
+
+(defn run-pipeline [ds context]
+  (-> (merge context {:dataset ds})
+      (drop-rows 2) ;; example for arbitray tabclecoth transformation
+      (categorical->number cf/categorical)
+      (set-inference-target "species")
+      (train-or-predict :xgboost-hinge {:model-type :xgboost/binary-hinge-loss})
+      (train-or-predict :xgboost-class {:model-type :xgboost/classification})))
+
 
 ;; fit thge pipeline (including train)
 (def fit-result
